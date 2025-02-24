@@ -1,0 +1,3 @@
+pip install qbittorrent-api
+pip install pyTelegramBotAPI
+pip install requests
