@@ -8,7 +8,7 @@ i = 0
 
 url = "https://api.anilibria.tv/v3/"
 
-random = "https://api.anilibria.tv/v3/title/random?filter=id,names[ru],names[en],season[year],season[string],genres,type[episodes],type[length],torrents[list],status[string]"
+random = "https://api.anilibria.tv/v3/title/random?filter=id,names[ru],names[en],season[year],season[string],genres,type[episodes],type[length],torrents,status[string]"
 
 search = "title/search?search="
 
@@ -42,7 +42,7 @@ def start_message(message):
 @bot.message_handler(content_types='text')
 def random_anime(message):
 
-    global ida, download_r
+    global ida, download_r, sizer
 
     if message.text=="Рандомное Аниме":
 
@@ -64,6 +64,32 @@ def random_anime(message):
         bot.delete_message(message.chat.id, random_anime.message_id-2)
 
         ida = random_anime.message_id
+
+        lis_dw = len(r["torrents"]["list"])
+
+        size = 0
+
+        list_dw = []
+
+        try:
+
+            for i in range(lis_dw):
+
+                dow_sizer = r["torrents"]["list"][i]["size_string"]
+
+                i =+ 1
+
+                list_dw.append(dow_sizer)
+        
+                if list_dw[0] <  list_dw[1]:
+
+                    sizer = 0
+
+                else: 
+
+                    sizer = 1
+        except:
+            sizer = 0
 
         download_r = r["torrents"]["list"]
     
@@ -124,7 +150,9 @@ def sh(message):
 
 def sel_anime(message):
 
-    global idal, download_sh
+    global idal, download_sh, size
+
+    list_dw = []
 
     i = 1
 
@@ -160,65 +188,97 @@ def sel_anime(message):
     
     idal = send.message_id
 
+    lis_dw = len(r["list"][int(sel)-1]["torrents"]["list"])
+
+    i = 0
+
+    size = 0
+
+    try:
+
+        list_dw = []
+
+        for i in range(lis_dw):
+
+            dow_size = r["list"][int(sel)-1]["torrents"]["list"][i]["size_string"]
+
+            i =+ 1
+
+            list_dw.append(dow_size)
+
+        print(list_dw)
+
+        if list_dw[0] <  list_dw[1]:
+
+            size = 1
+
+        else: 
+
+            size = 0
+
+    except:
+
+        size = 0
+
+    print(size)
+
     download_sh = r["list"][int(sel)-1]["torrents"]["list"]
 
-# @bot.callback_query_handler(func=lambda call:True)
-# def exit(call):
-#     if call.message:
-
-
-#         bot.delete_message(call.message.chat.id, idal)
-#         bot.delete_message(call.message.chat.id, idal-1)
-
 @bot.callback_query_handler(func=lambda call:True)
-def exit2(call):
+def exit(call):
     if call.message:
 
-        bot.delete_message(call.message.chat.id, ida)
-        bot.delete_message(call.message.chat.id, ida-1)
+        if call.data == "exit2":
 
-@bot.callback_query_handler(func=lambda call:True)
-def download(call):
-    if call.message:
-        conn_info = dict(
-            host="localhost",
-            port=8080,
-            username="admin",
-            password="adminadmin",
-        )
-        qbt_client = qbittorrentapi.Client(**conn_info)
 
-        try:
-            qbt_client.auth_log_in()
-        except qbittorrentapi.LoginFailed as e:
-            print(e)
+            bot.delete_message(call.message.chat.id, idal)
+            bot.delete_message(call.message.chat.id, idal-1)
 
-        qbt_client.auth_log_out()
+        if call.data == "exit":
+            bot.delete_message(call.message.chat.id, ida)
+            bot.delete_message(call.message.chat.id, ida-1)
 
-        with qbittorrentapi.Client(**conn_info) as qbt_client:
-            if qbt_client.torrents_add(urls=download_r[0]["magnet"]) != "Ok.":
-                raise Exception("Failed to add torrent.")
+        if call.data == "download":
 
-@bot.callback_query_handler(func=lambda call:True)
-def download2(call):
-    if call.message:
-        conn_info = dict(
-            host="localhost",
-            port=8080,
-            username="admin",
-            password="adminadmin",
-        )
-        qbt_client = qbittorrentapi.Client(**conn_info)
+            conn_info = dict(
+                host="localhost",
+                port=8080,
+                username="admin",
+                password="adminadmin",
+            )
+            qbt_client = qbittorrentapi.Client(**conn_info)
 
-        try:
-            qbt_client.auth_log_in()
-        except qbittorrentapi.LoginFailed as e:
-            print(e)
+            try:
+                qbt_client.auth_log_in()
+            except qbittorrentapi.LoginFailed as e:
+                print(e)
 
-        qbt_client.auth_log_out()
+            qbt_client.auth_log_out()
 
-        with qbittorrentapi.Client(**conn_info) as qbt_client:
-            if qbt_client.torrents_add(urls=download_sh[0]["magnet"]) != "Ok.":
-                raise Exception("Failed to add torrent.")
+            with qbittorrentapi.Client(**conn_info) as qbt_client:
+                if qbt_client.torrents_add(urls=download_r[sizer]["magnet"]) != "Ok.":
+                    print("Failed to add torrent.")
+
+        if call.data == "download2":
+            conn_info = dict(
+                host="localhost",
+                port=8080,
+                username="admin",
+                password="adminadmin",
+            )
+            qbt_client = qbittorrentapi.Client(**conn_info)
+
+            try:
+                qbt_client.auth_log_in()
+            except qbittorrentapi.LoginFailed as e:
+                print(e)
+
+            qbt_client.auth_log_out()
+
+            
+
+            with qbittorrentapi.Client(**conn_info) as qbt_client:
+                if qbt_client.torrents_add(urls=download_sh[size]["magnet"]) != "Ok.":
+                    print("Failed to add torrent.")
 
 bot.infinity_polling()
